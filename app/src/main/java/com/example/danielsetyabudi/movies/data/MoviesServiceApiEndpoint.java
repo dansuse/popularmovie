@@ -2,6 +2,8 @@ package com.example.danielsetyabudi.movies.data;
 
 import android.net.Uri;
 
+import com.example.danielsetyabudi.movies.BuildConfig;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -15,7 +17,7 @@ import java.util.Scanner;
 
 public final class MoviesServiceApiEndpoint {
 
-    private static final String api_key = "9ef558a9b5a7e27b2f8cf1c82d0e0dad";
+    private static final String api_key = BuildConfig.THE_MOVIE_DB_API_TOKEN;
     private static final String language = "en-US";
     private static final String page = "1";
 

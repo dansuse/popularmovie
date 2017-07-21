@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.example.danielsetyabudi.movies.R;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
+import com.example.danielsetyabudi.movies.widgets.SquareImageView;
 import com.squareup.picasso.Picasso;
 
 import butterknife.BindView;
@@ -24,12 +26,6 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     private static final String DIALOG_MOVIE_POSTER_TAG = "dialog_movie_poster_tag";
     private MovieDetailContract.UserActionsListener mActionsListener;
 
-    @BindView(R.id.iv_movie_poster) ImageView mMoviePosterImageView;
-    @OnClick(R.id.iv_movie_poster)
-    public void klikMoviePosterImageView(ImageView imageView){
-        mActionsListener.handleKlikMoviePosterImageView();
-    }
-
     @Override
     public void showDialogFragmentMoviePoster(String imageUrl) {
         MoviePosterDialogFragment moviePosterDialogFragment = MoviePosterDialogFragment.newInstance(imageUrl);
@@ -40,6 +36,13 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     @BindView(R.id.tv_release_date) TextView mReleaseDateTextView;
     @BindView(R.id.tv_synopsis) TextView mSynopsisTextView;
     @BindView(R.id.tv_user_rating) TextView mUserRatingTextView;
+    @BindView(R.id.toolbar) Toolbar mToolbar;
+    @BindView(R.id.square_iv_movie_poster) SquareImageView mMoviePosterSquareImageView;
+    @BindView(R.id.iv_movie_poster) ImageView mMoviePosterImageView;
+    @OnClick(R.id.iv_movie_poster)
+    public void klikMoviePosterImageView(ImageView imageView){
+        mActionsListener.handleKlikMoviePosterImageView();
+    }
 
     public static Intent newIntent(Context context, int movieId, int movieMode){
         Intent intent = new Intent(context, MovieDetailActivity.class);
@@ -53,6 +56,8 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
         ButterKnife.bind(this);
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mActionsListener = new MovieDetailPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
     }
 
@@ -129,6 +134,7 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     public void showMoviePoster(String imageUrl) {
         mMoviePosterImageView.setVisibility(View.VISIBLE);
         Picasso.with(this).load(imageUrl).into(mMoviePosterImageView);
+        Picasso.with(this).load(imageUrl).into(mMoviePosterSquareImageView);
     }
 
     @Override
