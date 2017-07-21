@@ -14,63 +14,53 @@ import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_TOP_RAT
  */
 
 public class InMemoryMoviesRepository implements MoviesRepository {
-    private final MoviesServiceApi mMoviesServiceApi;
+    //private final MoviesServiceApi mMoviesServiceApi;
+    private final MoviesServiceApiImpl mMoviesServiceApi;
 
     private int page = 1;
     List<Movie> mCachedPopularMovies = null;
     List<Movie> mCachedTopRatedMovies = null;
 
-    public InMemoryMoviesRepository(@NonNull MoviesServiceApi moviesServiceApi) {
+    public InMemoryMoviesRepository(@NonNull MoviesServiceApiImpl moviesServiceApi) {
         mMoviesServiceApi = moviesServiceApi;
     }
 
     @Override
-    public void getMovies(int mode, boolean hasInternetConnection, @NonNull final LoadMoviesCallback callback) {
+    public void getMovies(final int mode, boolean hasInternetConnection, @NonNull final LoadMoviesCallback callback) {
         // Load from API only if needed.
         if(mode == MODE_POPULAR){
-            if (mCachedPopularMovies == null) {
-                if(hasInternetConnection){
-                    page = 1;
-                    mMoviesServiceApi.getAllMovies(mode, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
-                        @Override
-                        public void onLoaded(List<Movie> movies) {
-                            //mCachedMovies = ImmutableList.copyOf(movies);
-                            mCachedPopularMovies = movies;
-                            callback.onMoviesLoaded(Lists.newArrayList(mCachedPopularMovies));
-                        }
-                    });
-                }else{
-                    callback.onMoviesLoaded(null);
-                }
-            } else {
+            if (mCachedPopularMovies != null) {
                 callback.onMoviesLoaded(Lists.newArrayList(mCachedPopularMovies));
+                return;
             }
         }else if(mode == MODE_TOP_RATED){
-            if (mCachedTopRatedMovies == null) {
-                if(hasInternetConnection){
-                    page = 1;
-                    mMoviesServiceApi.getAllMovies(mode, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
-                        @Override
-                        public void onLoaded(List<Movie> movies) {
-                            //mCachedMovies = ImmutableList.copyOf(movies);
-                            mCachedTopRatedMovies = movies;
-                            callback.onMoviesLoaded(Lists.newArrayList(mCachedTopRatedMovies));
-                        }
-                    });
-                }else{
-                    callback.onMoviesLoaded(null);
-                }
-            } else {
+            if (mCachedTopRatedMovies != null) {
                 callback.onMoviesLoaded(Lists.newArrayList(mCachedTopRatedMovies));
+                return;
             }
         }
-
+        if(hasInternetConnection){
+            page = 1;
+            mMoviesServiceApi.loadMovies(mode, page, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
+                @Override
+                public void onLoaded(List<Movie> movies) {
+                    //mCachedMovies = ImmutableList.copyOf(movies);
+                    if(mode == MODE_POPULAR)
+                        mCachedPopularMovies = movies;
+                    else if(mode == MODE_TOP_RATED)
+                        mCachedTopRatedMovies = movies;
+                    callback.onMoviesLoaded(Lists.newArrayList(movies));
+                }
+            });
+        }else{
+            callback.onMoviesLoaded(null);
+        }
     }
 
     @Override
     public void getNextPageMovies(final int mode, @NonNull final LoadMoviesCallback callback) {
         page = page + 1;
-        mMoviesServiceApi.getNextPageMovies(mode, page, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
+        mMoviesServiceApi.loadMovies(mode, page, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
             @Override
             public void onLoaded(List<Movie> movies) {
                 if(mode == MODE_POPULAR){

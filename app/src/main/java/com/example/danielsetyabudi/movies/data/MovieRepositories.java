@@ -13,7 +13,7 @@ public class MovieRepositories {
 
     private static MoviesRepository repository = null;
 
-    public synchronized static MoviesRepository getInMemoryRepoInstance(@NonNull MoviesServiceApi moviesServiceApi) {
+    public synchronized static MoviesRepository getInMemoryRepoInstance(@NonNull MoviesServiceApiImpl moviesServiceApi) {
         if (null == repository) {
             repository = new InMemoryMoviesRepository(moviesServiceApi);
         }
