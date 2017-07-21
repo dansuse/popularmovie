@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Movies</string>
+    <!--cd stands for content description-->
+    <string name="cd_movie_image_view">Image of Movie\'s Poster</string>
+
+    <string name="release_date">Release Date : %1$s</string>
+    <string name="user_rating">User Rating : %1$s</string>
+    <string name="synopsis">Synopsis : \n\n%1$s</string>
+
+    <string name="movie_detail_label">Movie Detail</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+
+    <string-array name="movies_options_array">
+        <item>Popular</item>
+        <item>Top Rated</item>
+    </string-array>
+</resources>
