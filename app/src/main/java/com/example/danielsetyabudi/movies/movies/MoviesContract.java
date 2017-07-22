@@ -1,6 +1,6 @@
 package com.example.danielsetyabudi.movies.movies;
 
-import com.example.danielsetyabudi.movies.data.Movie;
+import com.example.danielsetyabudi.movies.model.Movie;
 
 import java.util.List;
 

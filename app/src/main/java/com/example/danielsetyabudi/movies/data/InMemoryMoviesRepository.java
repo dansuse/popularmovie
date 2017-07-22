@@ -2,6 +2,7 @@ package com.example.danielsetyabudi.movies.data;
 
 import android.support.annotation.NonNull;
 
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.google.common.collect.Lists;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package com.example.danielsetyabudi.movies.moviedetail;
 
 import android.support.annotation.NonNull;
 
-import com.example.danielsetyabudi.movies.data.Movie;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MoviesRepository;
 
 /**

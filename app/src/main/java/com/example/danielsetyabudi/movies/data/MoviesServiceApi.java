@@ -1,9 +1,13 @@
 package com.example.danielsetyabudi.movies.data;
 
-import java.util.List;
+import com.example.danielsetyabudi.movies.model.ListModel;
+import com.example.danielsetyabudi.movies.model.Movie;
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 /**
@@ -12,14 +16,20 @@ import retrofit2.http.Query;
 
 public interface MoviesServiceApi {
     interface MoviesServiceCallback<T> {
-        void onLoaded(T movies);
+        void onLoaded(T results);
     }
 
     @GET("3/movie/popular")
-    Call<MovieList>loadPopularMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+    Call<ListModel<Movie>>loadPopularMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
 
     @GET("3/movie/top_rated")
-    Call<MovieList>loadTopRatedMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+    Call<ListModel<Movie>>loadTopRatedMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+
+    @GET("3/movie/{movie_id}/videos")
+    Call<ListModel<Trailer>>loadTrailers(@Path("movie_id") int movieId, @Query("api_key") String apiKey, @Query("language") String language);
+
+    @GET("3/movie/{movie_id}/reviews")
+    Call<ListModel<Review>>loadReviews(@Path("movie_id") int movieId, @Query("api_key") String apiKey, @Query("language") String language, @Query("page") int page);
 
 //    void getAllMovies(int mode, MoviesServiceCallback<List<Movie>> callback);
 

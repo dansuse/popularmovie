@@ -1,4 +1,4 @@
-package com.example.danielsetyabudi.movies.data;
+package com.example.danielsetyabudi.movies.model;
 
 import com.google.gson.annotations.SerializedName;
 

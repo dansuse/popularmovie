@@ -5,7 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
-import com.example.danielsetyabudi.movies.data.Movie;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MoviesRepository;
 
 import java.util.List;

@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 
 import com.example.danielsetyabudi.movies.R;
-import com.example.danielsetyabudi.movies.data.Movie;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
 import com.example.danielsetyabudi.movies.moviedetail.MovieDetailActivity;

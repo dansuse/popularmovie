@@ -1,9 +1,12 @@
 package com.example.danielsetyabudi.movies.data;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.example.danielsetyabudi.movies.BuildConfig;
+import com.example.danielsetyabudi.movies.model.ListModel;
+import com.example.danielsetyabudi.movies.model.Movie;
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -24,13 +27,11 @@ import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_TOP_RAT
 
 public class MoviesServiceApiImpl
         //implements MoviesServiceApi
-        implements Callback<MovieList>
 {
     private static final String BASE_URL = "https://api.themoviedb.org/";
-    private MoviesServiceApi.MoviesServiceCallback<List<Movie>> mCallback;
+    private final MoviesServiceApi mMoviesServiceApi;
 
-    public void loadMovies(int mode, int page, @NonNull MoviesServiceApi.MoviesServiceCallback<List<Movie>> callback){
-        mCallback = callback;
+    public MoviesServiceApiImpl() {
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .create();
@@ -39,33 +40,82 @@ public class MoviesServiceApiImpl
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
+        mMoviesServiceApi = retrofit.create(MoviesServiceApi.class);
+    }
 
-        MoviesServiceApi moviesServiceApi = retrofit.create(MoviesServiceApi.class);
-        Call<MovieList> call = null;
+    public void loadMovies(int mode, int page, @NonNull final MoviesServiceApi.MoviesServiceCallback<List<Movie>> callback){
+        Call<ListModel<Movie>> call = null;
         if(mode == MODE_POPULAR){
-            call = moviesServiceApi.loadPopularMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            call = mMoviesServiceApi.loadPopularMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
         }else if(mode == MODE_TOP_RATED){
-            call = moviesServiceApi.loadTopRatedMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            call = mMoviesServiceApi.loadTopRatedMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
         }
         if(call != null){
-            call.enqueue(this);
+            call.enqueue(new Callback<ListModel<Movie>>() {
+                @Override
+                public void onResponse(Call<ListModel<Movie>> call, Response<ListModel<Movie>> response) {
+                    if(response.isSuccessful()) {
+                        List<Movie> moviesList = response.body().getResults();
+                        callback.onLoaded(moviesList);
+                    } else {
+                        System.out.println(response.errorBody());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ListModel<Movie>> call, Throwable t) {
+                    t.printStackTrace();
+                }
+            });
         }
     }
 
-    @Override
-    public void onResponse(@NonNull Call<MovieList> call,@NonNull Response<MovieList> response) {
-        if(response.isSuccessful()) {
-            List<Movie> moviesList = response.body().getMovies();
-            mCallback.onLoaded(moviesList);
-        } else {
-//            System.out.println(response.errorBody());
+    public void loadTrailers(int movieId, @NonNull final MoviesServiceApi.MoviesServiceCallback<List<Trailer>> callback){
+        Call<ListModel<Trailer>> call = null;
+        call = mMoviesServiceApi.loadTrailers(movieId, BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US");
+        if(call != null){
+            call.enqueue(new Callback<ListModel<Trailer>>() {
+                @Override
+                public void onResponse(Call<ListModel<Trailer>> call, Response<ListModel<Trailer>> response) {
+                    if(response.isSuccessful()) {
+                        List<Trailer> results = response.body().getResults();
+                        callback.onLoaded(results);
+                    } else {
+                        System.out.println(response.errorBody());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ListModel<Trailer>> call, Throwable t) {
+                    t.printStackTrace();
+                }
+            });
         }
     }
 
-    @Override
-    public void onFailure(Call<MovieList> call, Throwable t) {
-//        t.printStackTrace();
+    public void loadReviews(int page, int movieId, @NonNull final MoviesServiceApi.MoviesServiceCallback<List<Review>> callback){
+        Call<ListModel<Review>> call = null;
+        call = mMoviesServiceApi.loadReviews(movieId, BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", page);
+        if(call != null){
+            call.enqueue(new Callback<ListModel<Review>>() {
+                @Override
+                public void onResponse(Call<ListModel<Review>> call, Response<ListModel<Review>> response) {
+                    if(response.isSuccessful()) {
+                        List<Review> results = response.body().getResults();
+                        callback.onLoaded(results);
+                    } else {
+                        System.out.println(response.errorBody());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ListModel<Review>> call, Throwable t) {
+                    t.printStackTrace();
+                }
+            });
+        }
     }
+
     //    @Override
 //    public void getAllMovies(int mode, MoviesServiceCallback<List<Movie>> callback) {
 //        URL url = null;

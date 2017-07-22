@@ -1,14 +1,5 @@
 package com.example.danielsetyabudi.movies.util;
 
-import com.example.danielsetyabudi.movies.data.Movie;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Daniel Setyabudi on 27/06/2017.
  */
