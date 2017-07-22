@@ -15,6 +15,7 @@ import java.util.Scanner;
  * Created by Daniel Setyabudi on 27/06/2017.
  */
 
+//this class is not used if we use retrofit
 public final class MoviesServiceApiEndpoint {
 
     private static final String api_key = BuildConfig.THE_MOVIE_DB_API_TOKEN;

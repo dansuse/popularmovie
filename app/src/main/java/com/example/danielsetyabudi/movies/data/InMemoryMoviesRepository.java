@@ -1,6 +1,7 @@
 package com.example.danielsetyabudi.movies.data;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.model.Review;
@@ -90,13 +91,7 @@ public class InMemoryMoviesRepository implements MoviesRepository {
     public void getMovie(int mode, @NonNull int movieId, @NonNull MoviesRepositoryCallback<Movie> callback) {
         List<Movie> temp = getCachedMovies(mode);
         if(temp != null){
-            Movie movie = null;
-            for (Movie m : temp) {
-                if(m.getId() == movieId){
-                    movie = m;
-                    break;
-                }
-            }
+            Movie movie = getMovieById(movieId, temp);
             callback.onResultLoaded(movie);
         }
     }
@@ -128,7 +123,7 @@ public class InMemoryMoviesRepository implements MoviesRepository {
             if(movie.getReviewList() != null){
                 callback.onResultLoaded(movie.getReviewList());
             }else{
-                mMoviesServiceApi.loadReviews(1, movieId, new MoviesServiceApi.MoviesServiceCallback<List<Review>>() {
+                mMoviesServiceApi.loadReviews(page, movieId, new MoviesServiceApi.MoviesServiceCallback<List<Review>>() {
                     @Override
                     public void onLoaded(List<Review> results) {
                         movie.setReviewList(results);

@@ -1,9 +1,14 @@
 package com.example.danielsetyabudi.movies.moviedetail;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MoviesRepository;
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
+
+import java.util.List;
 
 /**
  * Created by Daniel Setyabudi on 30/06/2017.
@@ -37,6 +42,18 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
                     mMovieDetailView.showSynopsis(movie.getOverview());
                     mMovieDetailView.showUserRating(movie.getUserRating());
                 }
+            }
+        });
+        mMoviesRepository.getTrailers(mode, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Trailer>>() {
+            @Override
+            public void onResultLoaded(List<Trailer> result) {
+
+            }
+        });
+        mMoviesRepository.getReviews(mode, 1, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Review>>() {
+            @Override
+            public void onResultLoaded(List<Review> result) {
+
             }
         });
     }

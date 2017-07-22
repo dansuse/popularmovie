@@ -4,6 +4,7 @@ package com.example.danielsetyabudi.movies.util;
  * Created by Daniel Setyabudi on 27/06/2017.
  */
 
+//this class is not used if we use retrofit
 public final class TheMovieDBJsonUtils {
 //    public static List<Movie> getSimpleMovieStringsFromJson(String movieJsonStr)
 //            throws JSONException {

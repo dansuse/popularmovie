@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.danielsetyabudi.movies.R;
@@ -39,6 +42,11 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
     @BindView(R.id.toolbar) Toolbar mToolbar;
     @BindView(R.id.square_iv_movie_poster) SquareImageView mMoviePosterSquareImageView;
     @BindView(R.id.iv_movie_poster) ImageView mMoviePosterImageView;
+    @BindView(R.id.cv_trailers) CardView mTrailersCardView;
+    @BindView(R.id.rv_trailers) RecyclerView mTrailersRecyclerView;
+    @BindView(R.id.rv_reviews) RecyclerView mReviewsRecyclerView;
+    @BindView(R.id.ll_reviews) LinearLayout mReviewsLinearLayout;
+
     @OnClick(R.id.iv_movie_poster)
     public void klikMoviePosterImageView(ImageView imageView){
         mActionsListener.handleKlikMoviePosterImageView();
