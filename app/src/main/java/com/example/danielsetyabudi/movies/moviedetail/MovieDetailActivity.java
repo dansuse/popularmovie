@@ -2,9 +2,12 @@ package com.example.danielsetyabudi.movies.moviedetail;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -13,21 +16,44 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.danielsetyabudi.movies.R;
+import com.example.danielsetyabudi.movies.adapter.ReviewsAdapter;
+import com.example.danielsetyabudi.movies.adapter.TrailersAdapter;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
 import com.example.danielsetyabudi.movies.widgets.SquareImageView;
 import com.squareup.picasso.Picasso;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+//di java, tidak dapat implement interface yang di deklarasi di
+//class itu sendiri
+public class MovieDetailActivity
+        extends AppCompatActivity implements MovieDetailContract.View
+{
 
-public class MovieDetailActivity extends AppCompatActivity implements MovieDetailContract.View{
-
+    public interface TrailerItemListener{
+        void onTrailerClick(Uri uriToWatchTrailer);
+    }
+    TrailerItemListener mTrailerItemListener = new TrailerItemListener() {
+        @Override
+        public void onTrailerClick(Uri uriToWatchTrailer) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uriToWatchTrailer);
+            startActivity(intent);
+        }
+    };
     private static final String EXTRA_MOVIE_ID = "extra_movie_id";
     private static final String EXTRA_MOVIE_MODE = "extra_movie_mode";
     private static final String DIALOG_MOVIE_POSTER_TAG = "dialog_movie_poster_tag";
     private MovieDetailContract.UserActionsListener mActionsListener;
+
+    private TrailersAdapter mTrailersAdapter;
+    private ReviewsAdapter mReviewsAdapter;
 
     @Override
     public void showDialogFragmentMoviePoster(String imageUrl) {
@@ -67,6 +93,18 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mActionsListener = new MovieDetailPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
+        mTrailersAdapter = new TrailersAdapter(this, mTrailerItemListener);
+        mReviewsAdapter = new ReviewsAdapter();
+
+        mTrailersRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        mTrailersRecyclerView.setAdapter(mTrailersAdapter);
+        mTrailersRecyclerView.setHasFixedSize(true);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(mTrailersRecyclerView.getContext(),
+                LinearLayoutManager.HORIZONTAL);
+        mTrailersRecyclerView.addItemDecoration(dividerItemDecoration);
+
+        mReviewsRecyclerView.setAdapter(mReviewsAdapter);
+        mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
     @Override
@@ -82,6 +120,18 @@ public class MovieDetailActivity extends AppCompatActivity implements MovieDetai
                 }
             }
         }
+    }
+
+    @Override
+    public void showTrailers(List<Trailer> trailers) {
+        mTrailersCardView.setVisibility(View.VISIBLE);
+        mTrailersAdapter.replaceData(trailers);
+    }
+
+    @Override
+    public void showReviews(List<Review> reviews) {
+        mReviewsLinearLayout.setVisibility(View.VISIBLE);
+        mReviewsAdapter.replaceData(reviews);
     }
 
     @Override

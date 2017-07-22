@@ -1,5 +1,10 @@
 package com.example.danielsetyabudi.movies.moviedetail;
 
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
+
+import java.util.List;
+
 /**
  * Created by Daniel Setyabudi on 30/06/2017.
  */
@@ -26,6 +31,9 @@ public interface MovieDetailContract {
         void setTitle(String title);
 
         void showDialogFragmentMoviePoster(String imageUrl);
+
+        void showTrailers(List<Trailer> trailers);
+        void showReviews(List<Review> reviews);
 
     }
     interface UserActionsListener{

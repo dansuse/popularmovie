@@ -47,13 +47,13 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
         mMoviesRepository.getTrailers(mode, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Trailer>>() {
             @Override
             public void onResultLoaded(List<Trailer> result) {
-
+                mMovieDetailView.showTrailers(result);
             }
         });
         mMoviesRepository.getReviews(mode, 1, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Review>>() {
             @Override
             public void onResultLoaded(List<Review> result) {
-
+                mMovieDetailView.showReviews(result);
             }
         });
     }

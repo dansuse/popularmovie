@@ -12,7 +12,7 @@ public class Trailer {
     private String name;
 
     public String getKey() {
-        return "http://www.youtube.com/watch?v=" + key;
+        return key;
     }
 
     public String getName() {
