@@ -5,8 +5,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
-import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MoviesRepository;
+import com.example.danielsetyabudi.movies.model.Movie;
 
 import java.util.List;
 
@@ -49,9 +49,9 @@ public class MoviesPresenter implements MoviesContract.UserActionsListener {
             if(forceUpdate){
                 mMoviesRepository.refreshData(mMovieMode);
             }
-            mMoviesRepository.getMovies(mMovieMode, true, new MoviesRepository.LoadMoviesCallback() {
+            mMoviesRepository.getMovies(mMovieMode, true, new MoviesRepository.MoviesRepositoryCallback<List<Movie>>() {
                 @Override
-                public void onMoviesLoaded(List<Movie> movies) {
+                public void onResultLoaded(List<Movie> movies) {
                     mMoviesView.showMovies(movies);
                     mMoviesView.setProgressIndicator(false);
                 }
@@ -60,9 +60,9 @@ public class MoviesPresenter implements MoviesContract.UserActionsListener {
             mMoviesView.setProgressIndicator(false);
             mMoviesView.showMessageNoInternetConnection();
             mMovieMode = mode;
-            mMoviesRepository.getMovies(mode, false, new MoviesRepository.LoadMoviesCallback() {
+            mMoviesRepository.getMovies(mode, false, new MoviesRepository.MoviesRepositoryCallback<List<Movie>>() {
                 @Override
-                public void onMoviesLoaded(List<Movie> movies) {
+                public void onResultLoaded(List<Movie> movies) {
                     mMoviesView.showMovies(movies);
                 }
             });
@@ -72,9 +72,9 @@ public class MoviesPresenter implements MoviesContract.UserActionsListener {
     @Override
     public void loadNextPageMovies() {
         if(isOnline()){
-            mMoviesRepository.getNextPageMovies(mMovieMode, new MoviesRepository.LoadMoviesCallback() {
+            mMoviesRepository.getNextPageMovies(mMovieMode, new MoviesRepository.MoviesRepositoryCallback<List<Movie>>() {
                 @Override
-                public void onMoviesLoaded(List<Movie> movies) {
+                public void onResultLoaded(List<Movie> movies) {
                     mMoviesView.showMovies(movies);
                 }
             });

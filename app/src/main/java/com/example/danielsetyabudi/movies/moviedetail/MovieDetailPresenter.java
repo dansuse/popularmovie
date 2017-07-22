@@ -22,9 +22,9 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
 
     @Override
     public void openMovie(int mode, int movieId) {
-        mMoviesRepository.getMovie(mode, movieId, new MoviesRepository.GetMovieCallback() {
+        mMoviesRepository.getMovie(mode, movieId, new MoviesRepository.MoviesRepositoryCallback<Movie>() {
             @Override
-            public void onMovieLoaded(Movie movie) {
+            public void onResultLoaded(Movie movie) {
                 mMovie = movie;
                 if(movie == null){
 

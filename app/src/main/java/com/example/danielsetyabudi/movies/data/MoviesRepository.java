@@ -12,21 +12,16 @@ import java.util.List;
 
 public interface MoviesRepository {
 
-    interface LoadMoviesCallback {
-
-        void onMoviesLoaded(List<Movie> movies);
+    //ini interface untuk diimplementasikan di presenter
+    interface MoviesRepositoryCallback<T> {
+        void onResultLoaded(T result);
     }
 
-    interface GetMovieCallback {
+    void getMovies(int mode, boolean hasInternetConnection, @NonNull MoviesRepositoryCallback<List<Movie>> callback);
 
-        void onMovieLoaded(Movie movie);
-    }
+    void getNextPageMovies(int mode, @NonNull MoviesRepositoryCallback<List<Movie>> callback);
 
-    void getMovies(int mode, boolean hasInternetConnection, @NonNull LoadMoviesCallback callback);
-
-    void getNextPageMovies(int mode, @NonNull LoadMoviesCallback callback);
-
-    void getMovie(int mode, @NonNull int movieId, @NonNull GetMovieCallback callback);
+    void getMovie(int mode, @NonNull int movieId, @NonNull MoviesRepositoryCallback<Movie> callback);
 
     void refreshData(int mode);
 }

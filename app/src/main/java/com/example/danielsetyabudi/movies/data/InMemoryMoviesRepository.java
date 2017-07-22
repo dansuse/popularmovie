@@ -27,16 +27,16 @@ public class InMemoryMoviesRepository implements MoviesRepository {
     }
 
     @Override
-    public void getMovies(final int mode, boolean hasInternetConnection, @NonNull final LoadMoviesCallback callback) {
+    public void getMovies(final int mode, boolean hasInternetConnection, @NonNull final MoviesRepositoryCallback<List<Movie>> callback) {
         // Load from API only if needed.
         if(mode == MODE_POPULAR){
             if (mCachedPopularMovies != null) {
-                callback.onMoviesLoaded(Lists.newArrayList(mCachedPopularMovies));
+                callback.onResultLoaded(Lists.newArrayList(mCachedPopularMovies));
                 return;
             }
         }else if(mode == MODE_TOP_RATED){
             if (mCachedTopRatedMovies != null) {
-                callback.onMoviesLoaded(Lists.newArrayList(mCachedTopRatedMovies));
+                callback.onResultLoaded(Lists.newArrayList(mCachedTopRatedMovies));
                 return;
             }
         }
@@ -50,33 +50,33 @@ public class InMemoryMoviesRepository implements MoviesRepository {
                         mCachedPopularMovies = movies;
                     else if(mode == MODE_TOP_RATED)
                         mCachedTopRatedMovies = movies;
-                    callback.onMoviesLoaded(Lists.newArrayList(movies));
+                    callback.onResultLoaded(Lists.newArrayList(movies));
                 }
             });
         }else{
-            callback.onMoviesLoaded(null);
+            callback.onResultLoaded(null);
         }
     }
 
     @Override
-    public void getNextPageMovies(final int mode, @NonNull final LoadMoviesCallback callback) {
+    public void getNextPageMovies(final int mode, @NonNull final MoviesRepositoryCallback<List<Movie>> callback) {
         page = page + 1;
         mMoviesServiceApi.loadMovies(mode, page, new MoviesServiceApi.MoviesServiceCallback<List<Movie>>() {
             @Override
             public void onLoaded(List<Movie> movies) {
                 if(mode == MODE_POPULAR){
                     mCachedPopularMovies.addAll(movies);
-                    callback.onMoviesLoaded(Lists.newArrayList(mCachedPopularMovies));
+                    callback.onResultLoaded(Lists.newArrayList(mCachedPopularMovies));
                 }else if(mode == MODE_TOP_RATED){
                     mCachedTopRatedMovies.addAll(movies);
-                    callback.onMoviesLoaded(Lists.newArrayList(mCachedTopRatedMovies));
+                    callback.onResultLoaded(Lists.newArrayList(mCachedTopRatedMovies));
                 }
             }
         });
     }
 
     @Override
-    public void getMovie(int mode, @NonNull int movieId, @NonNull GetMovieCallback callback) {
+    public void getMovie(int mode, @NonNull int movieId, @NonNull MoviesRepositoryCallback<Movie> callback) {
         List<Movie> temp = null;
         if(mode == MODE_POPULAR){
             temp = mCachedPopularMovies;
@@ -91,7 +91,7 @@ public class InMemoryMoviesRepository implements MoviesRepository {
                     break;
                 }
             }
-            callback.onMovieLoaded(movie);
+            callback.onResultLoaded(movie);
         }
     }
 
