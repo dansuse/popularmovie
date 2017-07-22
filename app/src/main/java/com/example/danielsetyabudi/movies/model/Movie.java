@@ -2,6 +2,8 @@ package com.example.danielsetyabudi.movies.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 /**
  * Created by Daniel Setyabudi on 27/06/2017.
  */
@@ -23,6 +25,8 @@ public class Movie {
     @SerializedName("vote_average")
     private String userRating;//vote_average
 
+    private List<Trailer> mTrailerList;
+    private List<Review> mReviewList;
     //variabel baseURLPosterPath akan null apabila object movie digenerate oleh
     //gson
 //    String baseURLPosterPath = "http://image.tmdb.org/t/p/w185";
@@ -39,10 +43,6 @@ public class Movie {
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getPosterPath() {
@@ -65,4 +65,19 @@ public class Movie {
         return userRating;
     }
 
+    public List<Trailer> getTrailerList() {
+        return mTrailerList;
+    }
+
+    public void setTrailerList(List<Trailer> trailerList) {
+        mTrailerList = trailerList;
+    }
+
+    public List<Review> getReviewList() {
+        return mReviewList;
+    }
+
+    public void setReviewList(List<Review> reviewList) {
+        mReviewList = reviewList;
+    }
 }

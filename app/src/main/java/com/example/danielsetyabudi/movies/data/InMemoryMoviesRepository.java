@@ -3,6 +3,8 @@ package com.example.danielsetyabudi.movies.data;
 import android.support.annotation.NonNull;
 
 import com.example.danielsetyabudi.movies.model.Movie;
+import com.example.danielsetyabudi.movies.model.Review;
+import com.example.danielsetyabudi.movies.model.Trailer;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -24,6 +26,15 @@ public class InMemoryMoviesRepository implements MoviesRepository {
 
     public InMemoryMoviesRepository(@NonNull MoviesServiceApiImpl moviesServiceApi) {
         mMoviesServiceApi = moviesServiceApi;
+    }
+
+    @Override
+    public void refreshData(int mode) {
+        if(mode == MODE_POPULAR){
+            mCachedPopularMovies = null;
+        }else if(mode == MODE_TOP_RATED){
+            mCachedTopRatedMovies = null;
+        }
     }
 
     @Override
@@ -77,12 +88,7 @@ public class InMemoryMoviesRepository implements MoviesRepository {
 
     @Override
     public void getMovie(int mode, @NonNull int movieId, @NonNull MoviesRepositoryCallback<Movie> callback) {
-        List<Movie> temp = null;
-        if(mode == MODE_POPULAR){
-            temp = mCachedPopularMovies;
-        }else if(mode == MODE_TOP_RATED){
-            temp = mCachedTopRatedMovies;
-        }
+        List<Movie> temp = getCachedMovies(mode);
         if(temp != null){
             Movie movie = null;
             for (Movie m : temp) {
@@ -96,11 +102,58 @@ public class InMemoryMoviesRepository implements MoviesRepository {
     }
 
     @Override
-    public void refreshData(int mode) {
-        if(mode == MODE_POPULAR){
-            mCachedPopularMovies = null;
-        }else if(mode == MODE_TOP_RATED){
-            mCachedTopRatedMovies = null;
+    public void getTrailers(int mode, @NonNull int movieId, @NonNull final MoviesRepositoryCallback<List<Trailer>> callback) {
+        List<Movie> temp = getCachedMovies(mode);
+        if(temp != null){
+            final Movie movie = getMovieById(movieId, temp);
+            if(movie.getTrailerList() != null){
+                callback.onResultLoaded(movie.getTrailerList());
+            }else{
+                mMoviesServiceApi.loadTrailers(movieId, new MoviesServiceApi.MoviesServiceCallback<List<Trailer>>() {
+                    @Override
+                    public void onLoaded(List<Trailer> results) {
+                        movie.setTrailerList(results);
+                        callback.onResultLoaded(results);
+                    }
+                });
+            }
         }
+    }
+
+    @Override
+    public void getReviews(int mode, int page, @NonNull int movieId, @NonNull final MoviesRepositoryCallback<List<Review>> callback) {
+        List<Movie> temp = getCachedMovies(mode);
+        if(temp != null){
+            final Movie movie = getMovieById(movieId, temp);
+            if(movie.getReviewList() != null){
+                callback.onResultLoaded(movie.getReviewList());
+            }else{
+                mMoviesServiceApi.loadReviews(1, movieId, new MoviesServiceApi.MoviesServiceCallback<List<Review>>() {
+                    @Override
+                    public void onLoaded(List<Review> results) {
+                        movie.setReviewList(results);
+                        callback.onResultLoaded(results);
+                    }
+                });
+            }
+        }
+    }
+
+    private List<Movie> getCachedMovies(int mode){
+        if(mode == MODE_POPULAR){
+            return mCachedPopularMovies;
+        }else if(mode == MODE_TOP_RATED){
+            return mCachedTopRatedMovies;
+        }
+        return null;
+    }
+
+    private Movie getMovieById(int id, List<Movie>temp){
+        for (Movie m : temp) {
+            if(m.getId() == id){
+                return m;
+            }
+        }
+        return null;
     }
 }

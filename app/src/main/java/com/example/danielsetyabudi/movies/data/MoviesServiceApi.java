@@ -15,6 +15,7 @@ import retrofit2.http.Query;
  */
 
 public interface MoviesServiceApi {
+    //interface ini untuk komunikasi antara MoviesServiceApi dengan Repository
     interface MoviesServiceCallback<T> {
         void onLoaded(T results);
     }
