@@ -10,6 +10,8 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -54,6 +56,7 @@ public class MovieDetailActivity
 
     private TrailersAdapter mTrailersAdapter;
     private ReviewsAdapter mReviewsAdapter;
+    private MenuItem mFavMenuItem;
 
     @Override
     public void showDialogFragmentMoviePoster(String imageUrl) {
@@ -92,7 +95,7 @@ public class MovieDetailActivity
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        mActionsListener = new MovieDetailPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
+        mActionsListener = new MovieDetailPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this, this);
         mTrailersAdapter = new TrailersAdapter(this, mTrailerItemListener);
         mReviewsAdapter = new ReviewsAdapter();
 
@@ -120,6 +123,30 @@ public class MovieDetailActivity
                 }
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        mFavMenuItem = menu.findItem(R.id.action_favorite);
+        mActionsListener.checkIfMovieIsFavorite();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_favorite:
+                mActionsListener.setMovieAsFavorite();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void turnFavorite(boolean favorite) {
+        mFavMenuItem.setIcon((favorite) ? R.drawable.ic_favorite_on : R.drawable.ic_favorite_off);
     }
 
     @Override

@@ -88,4 +88,9 @@ public class MoviesPresenter implements MoviesContract.UserActionsListener {
     public void handleMovieClicked(int movieId) {
         mMoviesView.intentToDetail(movieId, mMovieMode);
     }
+
+    @Override
+    public void loadFavoriteMovies() {
+
+    }
 }

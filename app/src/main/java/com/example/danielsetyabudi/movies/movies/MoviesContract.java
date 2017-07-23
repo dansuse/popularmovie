@@ -21,5 +21,7 @@ public interface MoviesContract {
         void loadMovies(boolean forceUpdate);
         void loadNextPageMovies();
         void handleMovieClicked(int movieId);
+
+        void loadFavoriteMovies();
     }
 }

@@ -28,6 +28,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".movies.MoviesActivity" />
         </activity>
+        <provider
+            android:authorities="com.example.danielsetyabudi.movies"
+            android:name=".contentprovider.MovieProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>

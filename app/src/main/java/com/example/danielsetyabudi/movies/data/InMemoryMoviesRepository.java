@@ -1,5 +1,6 @@
 package com.example.danielsetyabudi.movies.data;
 
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -151,4 +152,27 @@ public class InMemoryMoviesRepository implements MoviesRepository {
         }
         return null;
     }
+
+//    @Override
+//    public void getFavoriteMovie(@NonNull MoviesRepositoryCallback<List<Movie>> callback) {
+//
+//    }
+//
+//    @Override
+//    public void checkIfMovieIsFavorite(int movieId, @NonNull MoviesRepositoryCallback<Boolean> callback) {
+//        new AsyncTask<Integer, Void, Boolean>(){
+//            @Override
+//            protected Boolean doInBackground(Integer... params) {
+//                if(params[0] == null) return false;
+//                boolean isFavorite = false;
+//
+//                return isFavorite;
+//            }
+//        }.execute(movieId);
+//    }
+//
+//    @Override
+//    public void setMovieAsFavorite(Movie movie, List<Trailer> trailerList, List<Review> reviewList) {
+//
+//    }
 }

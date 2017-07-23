@@ -1,10 +1,15 @@
 package com.example.danielsetyabudi.movies.moviedetail;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
-import com.example.danielsetyabudi.movies.model.Movie;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract;
 import com.example.danielsetyabudi.movies.data.MoviesRepository;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.model.Review;
 import com.example.danielsetyabudi.movies.model.Trailer;
 
@@ -19,8 +24,12 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
     private final MoviesRepository mMoviesRepository;
     private final MovieDetailContract.View mMovieDetailView;
     private Movie mMovie = null;
+    private List<Trailer>mTrailerList = null;
+    private List<Review>mReviewList = null;
+    private Context mContext = null;
 
-    public MovieDetailPresenter(@NonNull MoviesRepository moviesRepository, @NonNull MovieDetailContract.View movieDetailView) {
+    public MovieDetailPresenter(@NonNull MoviesRepository moviesRepository, @NonNull MovieDetailContract.View movieDetailView, Context context) {
+        mContext = context;
         mMoviesRepository = moviesRepository;
         mMovieDetailView = movieDetailView;
     }
@@ -47,13 +56,15 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
         mMoviesRepository.getTrailers(mode, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Trailer>>() {
             @Override
             public void onResultLoaded(List<Trailer> result) {
-                mMovieDetailView.showTrailers(result);
+                mTrailerList = result;
+                if(result.size() > 0) mMovieDetailView.showTrailers(result);
             }
         });
         mMoviesRepository.getReviews(mode, 1, movieId, new MoviesRepository.MoviesRepositoryCallback<List<Review>>() {
             @Override
             public void onResultLoaded(List<Review> result) {
-                mMovieDetailView.showReviews(result);
+                mReviewList = result;
+                if(result.size() > 0) mMovieDetailView.showReviews(result);
             }
         });
     }
@@ -62,6 +73,144 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
     public void handleKlikMoviePosterImageView() {
         if(mMovie != null){
             mMovieDetailView.showDialogFragmentMoviePoster(mMovie.getPosterPath());
+        }
+    }
+
+    @Override
+    public void checkIfMovieIsFavorite() {
+
+        new AsyncTask<Integer, Void, Boolean>(){
+            @Override
+            protected Boolean doInBackground(Integer... params) {
+                if(params[0] == null)return false;
+                boolean isFavorite = false;
+                Uri uri = MovieContract.MovieEntry.CONTENT_URI.buildUpon()
+                        .appendPath(params[0].toString()).build();
+                Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+                if(cursor != null && cursor.moveToFirst()){
+                    isFavorite = true;
+                    cursor.close();
+                }
+                else isFavorite=false;
+                return isFavorite;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                mMovieDetailView.turnFavorite(aBoolean);
+            }
+        }.execute(mMovie.getId());
+    }
+
+    interface CallbackTask{
+        public void onTaskFinish(int taskNumber);
+    }
+    CallbackTask mCallbackTask = new CallbackTask() {
+        @Override
+        public void onTaskFinish(int taskNumber) {
+            if(taskNumber == 1){//selesai insert movie
+                if(mTrailerList.size() > 0){
+                    ContentValues[]contentValues = new ContentValues[mTrailerList.size()];
+                    for(int i=0 ; i<mTrailerList.size() ; i++){
+                        Trailer t = mTrailerList.get(i);
+                        contentValues[i] = new ContentValues();
+                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_KEY, t.getKey());
+                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_NAME, t.getName());
+                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                    }
+                    new InsertTrailersTask().execute(contentValues);
+                    return;
+                }else if(mReviewList.size() > 0){
+                    ContentValues[]contentValues = new ContentValues[mReviewList.size()];
+                    for(int i=0 ; i<mReviewList.size() ; i++){
+                        Review r = mReviewList.get(i);
+                        contentValues[i] = new ContentValues();
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                    }
+                    new InsertReviewsTask().execute(contentValues);
+                    return;
+                }
+            }else if(taskNumber == 2){//selesai insert trailer
+                if(mReviewList.size() > 0){
+                    ContentValues[]contentValues = new ContentValues[mReviewList.size()];
+                    for(int i=0 ; i<mReviewList.size() ; i++){
+                        Review r = mReviewList.get(i);
+                        contentValues[i] = new ContentValues();
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
+                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                    }
+                    new InsertReviewsTask().execute(contentValues);
+                    return;
+                }
+            }
+            mMovieDetailView.turnFavorite(true);
+        }
+    };
+
+    @Override
+    public void setMovieAsFavorite() {
+        if(mMovie != null){
+            ContentValues cv = new ContentValues();
+            cv.put(MovieContract.MovieEntry._ID, mMovie.getId());
+            cv.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.getOriginalTitle());
+            cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
+            cv.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, mMovie.getOriginalPosterPath());
+            cv.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+            cv.put(MovieContract.MovieEntry.COLUMN_USER_RATING, mMovie.getUserRating());
+            new InsertMovieTask().execute(cv);
+        }
+    }
+    class InsertMovieTask extends AsyncTask<ContentValues, Void, Boolean>{
+        @Override
+        protected Boolean doInBackground(ContentValues... params) {
+            if(params[0] == null) return false;
+            Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+            Uri returnUri = mContext.getContentResolver().insert(uri, params[0]);
+            return returnUri != null;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(1);
+        }
+    }
+
+    class InsertTrailersTask extends AsyncTask<ContentValues[], Void, Boolean>{
+
+        @Override
+        protected Boolean doInBackground(ContentValues[]... params) {
+            if(params[0] == null) return false;
+            Uri uri = MovieContract.TrailerEntry.CONTENT_URI.buildUpon()
+                    .appendPath(String.valueOf(mMovie.getId())).build();
+            int rowInserted = mContext.getContentResolver().bulkInsert(uri, params[0]);
+            return rowInserted > 0;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(2);
+        }
+    }
+    class InsertReviewsTask extends AsyncTask<ContentValues[], Void, Boolean>{
+        @Override
+        protected Boolean doInBackground(ContentValues[]... params) {
+            if(params[0] == null) return false;
+            Uri uri = MovieContract.ReviewEntry.CONTENT_URI.buildUpon()
+                    .appendPath(String.valueOf(mMovie.getId())).build();
+            int rowInserted = mContext.getContentResolver().bulkInsert(uri, params[0]);
+            return rowInserted > 0;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(3);
         }
     }
 }

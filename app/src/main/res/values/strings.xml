@@ -13,8 +13,10 @@
     <string-array name="movies_options_array">
         <item>Popular</item>
         <item>Top Rated</item>
+        <item>Favorite</item>
     </string-array>
 
     <string name="trailers">Trailers</string>
     <string name="reviews">Reviews</string>
+    <string name="action_favorite">Favorite</string>
 </resources>

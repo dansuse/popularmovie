@@ -35,9 +35,13 @@ public interface MovieDetailContract {
         void showTrailers(List<Trailer> trailers);
         void showReviews(List<Review> reviews);
 
+        void turnFavorite(boolean favorite);
     }
     interface UserActionsListener{
         void openMovie(int mode, int movieId);
         void handleKlikMoviePosterImageView();
+        //void checkIfMovieIsFavorite(Context context);
+        void checkIfMovieIsFavorite();
+        void setMovieAsFavorite();
     }
 }

@@ -49,6 +49,10 @@ public class Movie {
         return "http://image.tmdb.org/t/p/w185" + posterPath;
     }
 
+    public String getOriginalPosterPath(){
+        return posterPath;
+    }
+
     public String getReleaseDate() {
         return releaseDate;
     }

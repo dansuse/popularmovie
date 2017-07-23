@@ -29,5 +29,9 @@ public interface MoviesRepository {
 
     void getReviews(int mode, int page, @NonNull int movieId, @NonNull MoviesRepositoryCallback<List<Review>> callback);
 
+//    void getFavoriteMovie(@NonNull MoviesRepositoryCallback<List<Movie>> callback);
+//    void checkIfMovieIsFavorite(int movieId, @NonNull MoviesRepositoryCallback<Boolean> callback);
+//    void setMovieAsFavorite(Movie movie, List<Trailer> trailerList, List<Review>reviewList);
+
     void refreshData(int mode);
 }
