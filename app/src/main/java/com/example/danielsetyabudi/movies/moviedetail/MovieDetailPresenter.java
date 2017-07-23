@@ -18,7 +18,6 @@ import java.util.List;
 /**
  * Created by Daniel Setyabudi on 30/06/2017.
  */
-
 public class MovieDetailPresenter implements MovieDetailContract.UserActionsListener {
 
     private final MoviesRepository mMoviesRepository;
@@ -27,6 +26,7 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
     private List<Trailer>mTrailerList = null;
     private List<Review>mReviewList = null;
     private Context mContext = null;
+    private boolean mIsFavorite = false;
 
     public MovieDetailPresenter(@NonNull MoviesRepository moviesRepository, @NonNull MovieDetailContract.View movieDetailView, Context context) {
         mContext = context;
@@ -43,6 +43,7 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
                 if(movie == null){
 
                 }else{
+                    mMovieDetailView.setMovie(movie);
                     mMovieDetailView.setTitle(movie.getOriginalTitle());
                     //mMovieDetailView.setSubtitle(movie.getOriginalTitle());
                     mMovieDetailView.showMoviePoster(movie.getPosterPath());
@@ -77,7 +78,7 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
     }
 
     @Override
-    public void checkIfMovieIsFavorite() {
+    public void checkIfMovieIsFavorite(int movieId) {
 
         new AsyncTask<Integer, Void, Boolean>(){
             @Override
@@ -98,9 +99,10 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
             @Override
             protected void onPostExecute(Boolean aBoolean) {
                 super.onPostExecute(aBoolean);
+                mIsFavorite = aBoolean;
                 mMovieDetailView.turnFavorite(aBoolean);
             }
-        }.execute(mMovie.getId());
+        }.execute(movieId);
     }
 
     interface CallbackTask{
@@ -109,59 +111,90 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
     CallbackTask mCallbackTask = new CallbackTask() {
         @Override
         public void onTaskFinish(int taskNumber) {
-            if(taskNumber == 1){//selesai insert movie
-                if(mTrailerList.size() > 0){
-                    ContentValues[]contentValues = new ContentValues[mTrailerList.size()];
-                    for(int i=0 ; i<mTrailerList.size() ; i++){
-                        Trailer t = mTrailerList.get(i);
-                        contentValues[i] = new ContentValues();
-                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_KEY, t.getKey());
-                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_NAME, t.getName());
-                        contentValues[i].put(MovieContract.TrailerEntry.COLUMN_MOVIE_ID, mMovie.getId());
+            if(!mIsFavorite){
+                if(taskNumber == 1){//selesai insert movie
+                    if(mTrailerList.size() > 0){
+                        ContentValues[]contentValues = new ContentValues[mTrailerList.size()];
+                        for(int i=0 ; i<mTrailerList.size() ; i++){
+                            Trailer t = mTrailerList.get(i);
+                            contentValues[i] = new ContentValues();
+                            contentValues[i].put(MovieContract.TrailerEntry.COLUMN_KEY, t.getKey());
+                            contentValues[i].put(MovieContract.TrailerEntry.COLUMN_NAME, t.getName());
+                            contentValues[i].put(MovieContract.TrailerEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                        }
+                        new InsertTrailersTask().execute(contentValues);
+                        return;
+                    }else if(mReviewList.size() > 0){
+                        ContentValues[]contentValues = new ContentValues[mReviewList.size()];
+                        for(int i=0 ; i<mReviewList.size() ; i++){
+                            Review r = mReviewList.get(i);
+                            contentValues[i] = new ContentValues();
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                        }
+                        new InsertReviewsTask().execute(contentValues);
+                        return;
                     }
-                    new InsertTrailersTask().execute(contentValues);
+                }else if(taskNumber == 2){//selesai insert trailer
+                    if(mReviewList.size() > 0){
+                        ContentValues[]contentValues = new ContentValues[mReviewList.size()];
+                        for(int i=0 ; i<mReviewList.size() ; i++){
+                            Review r = mReviewList.get(i);
+                            contentValues[i] = new ContentValues();
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
+                            contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
+                        }
+                        new InsertReviewsTask().execute(contentValues);
+                        return;
+                    }
+                }
+                mIsFavorite = true;
+                mMovieDetailView.turnFavorite(true);
+            }else{
+                if(taskNumber == 1){//selesai delete reviews
+                    if(mTrailerList.size() > 0){
+                        new DeleteTrailersTask().execute();
+                    }else{
+                        new DeleteMovieTask().execute();
+                    }
                     return;
-                }else if(mReviewList.size() > 0){
-                    ContentValues[]contentValues = new ContentValues[mReviewList.size()];
-                    for(int i=0 ; i<mReviewList.size() ; i++){
-                        Review r = mReviewList.get(i);
-                        contentValues[i] = new ContentValues();
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
-                    }
-                    new InsertReviewsTask().execute(contentValues);
+                }else if(taskNumber == 2){//selesai delete trailers
+                    new DeleteMovieTask().execute();
                     return;
                 }
-            }else if(taskNumber == 2){//selesai insert trailer
-                if(mReviewList.size() > 0){
-                    ContentValues[]contentValues = new ContentValues[mReviewList.size()];
-                    for(int i=0 ; i<mReviewList.size() ; i++){
-                        Review r = mReviewList.get(i);
-                        contentValues[i] = new ContentValues();
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_AUTHOR, r.getAuthor());
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_CONTENT, r.getContent());
-                        contentValues[i].put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, mMovie.getId());
-                    }
-                    new InsertReviewsTask().execute(contentValues);
-                    return;
-                }
+                mIsFavorite = false;
+                mMovieDetailView.turnFavorite(false);
             }
-            mMovieDetailView.turnFavorite(true);
         }
     };
 
     @Override
-    public void setMovieAsFavorite() {
-        if(mMovie != null){
-            ContentValues cv = new ContentValues();
-            cv.put(MovieContract.MovieEntry._ID, mMovie.getId());
-            cv.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.getOriginalTitle());
-            cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
-            cv.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, mMovie.getOriginalPosterPath());
-            cv.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
-            cv.put(MovieContract.MovieEntry.COLUMN_USER_RATING, mMovie.getUserRating());
-            new InsertMovieTask().execute(cv);
+    public void setMovieAsFavorite(Movie movie, List<Trailer> trailerList, List<Review> reviewList) {
+        mMovie = movie;
+        mTrailerList = trailerList;
+        mReviewList = reviewList;
+        if(mIsFavorite){
+            if(mReviewList.size() > 0){
+                new DeleteReviewsTask().execute();
+            }else if(mTrailerList.size() > 0){
+                new DeleteTrailersTask().execute();
+            }else{
+                new DeleteMovieTask().execute();
+            }
+
+        }else{
+            if(mMovie != null){
+                ContentValues cv = new ContentValues();
+                cv.put(MovieContract.MovieEntry._ID, mMovie.getId());
+                cv.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.getOriginalTitle());
+                cv.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, mMovie.getOverview());
+                cv.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, mMovie.getOriginalPosterPath());
+                cv.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+                cv.put(MovieContract.MovieEntry.COLUMN_USER_RATING, mMovie.getUserRating());
+                new InsertMovieTask().execute(cv);
+            }
         }
     }
     class InsertMovieTask extends AsyncTask<ContentValues, Void, Boolean>{
@@ -205,6 +238,51 @@ public class MovieDetailPresenter implements MovieDetailContract.UserActionsList
                     .appendPath(String.valueOf(mMovie.getId())).build();
             int rowInserted = mContext.getContentResolver().bulkInsert(uri, params[0]);
             return rowInserted > 0;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(3);
+        }
+    }
+
+    class DeleteReviewsTask extends AsyncTask<Void, Void, Boolean>{
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Uri uri = MovieContract.ReviewEntry.buildReviewUri(mMovie.getId());
+            int rowDeleted = mContext.getContentResolver().delete(uri, null, null);
+            return rowDeleted > 0;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(1);
+        }
+    }
+
+    class DeleteTrailersTask extends AsyncTask<Void, Void, Boolean>{
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Uri uri = MovieContract.TrailerEntry.buildTrailerUri(mMovie.getId());
+            int rowDeleted = mContext.getContentResolver().delete(uri, null, null);
+            return rowDeleted > 0;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if(aBoolean) mCallbackTask.onTaskFinish(2);
+        }
+    }
+
+    class DeleteMovieTask extends AsyncTask<Void, Void, Boolean>{
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Uri uri = MovieContract.MovieEntry.buildMovieUri(mMovie.getId());
+            int rowDeleted = mContext.getContentResolver().delete(uri, null, null);
+            return rowDeleted > 0;
         }
 
         @Override

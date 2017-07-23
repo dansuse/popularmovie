@@ -18,4 +18,12 @@ public class Trailer {
     public String getName() {
         return name;
     }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

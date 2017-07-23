@@ -1,6 +1,7 @@
 package com.example.danielsetyabudi.movies.adapter;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.danielsetyabudi.movies.R;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract;
 import com.example.danielsetyabudi.movies.model.Trailer;
 import com.example.danielsetyabudi.movies.moviedetail.MovieDetailActivity;
 import com.squareup.picasso.Picasso;
@@ -27,14 +29,31 @@ public class TrailersAdapter extends RecyclerView.Adapter<TrailersAdapter.Traile
     private MovieDetailActivity.TrailerItemListener mTrailerItemListener;
     private Context mContext;
 
+    private boolean mModeCursor = false;
+    private Cursor mCursor = null;
+
     public TrailersAdapter(Context context, MovieDetailActivity.TrailerItemListener trailerItemListener) {
         mTrailerItemListener = trailerItemListener;
         mContext = context;
     }
 
     public void replaceData(List<Trailer> trailerList){
+        mModeCursor = false;
+        tutupCursor();
         mTrailerList = trailerList;
         notifyDataSetChanged();
+    }
+
+    public void swapCursor(Cursor cursor){
+        mModeCursor = true;
+        tutupCursor();
+        mCursor = cursor;
+        notifyDataSetChanged();
+    }
+    private void tutupCursor(){
+        if(mCursor != null){
+            mCursor.close();
+        }
     }
 
     @Override
@@ -46,12 +65,33 @@ public class TrailersAdapter extends RecyclerView.Adapter<TrailersAdapter.Traile
 
     @Override
     public void onBindViewHolder(TrailerViewHolder holder, int position) {
-        holder.bind(mTrailerList.get(position));
+        if(mModeCursor){
+            Trailer trailer = getItem(position);
+            if(trailer != null){
+                holder.bind(trailer);
+            }
+        }else{
+            holder.bind(mTrailerList.get(position));
+        }
+    }
+
+    private Trailer getItem(int position){
+        if(mCursor != null && !mCursor.isClosed() && mCursor.moveToPosition(position)){
+            Trailer trailer = new Trailer();
+            trailer.setName(mCursor.getString(mCursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_NAME)));
+            trailer.setKey(mCursor.getString(mCursor.getColumnIndex(MovieContract.TrailerEntry.COLUMN_KEY)));
+            return trailer;
+        }
+        return null;
     }
 
     @Override
     public int getItemCount() {
-        return mTrailerList == null ? 0 : mTrailerList.size();
+        if(mModeCursor){
+            return mCursor == null ? 0 : mCursor.getCount();
+        }else{
+            return mTrailerList == null ? 0 : mTrailerList.size();
+        }
     }
 
     class TrailerViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
@@ -73,8 +113,15 @@ public class TrailersAdapter extends RecyclerView.Adapter<TrailersAdapter.Traile
         @Override
         public void onClick(View v) {
             int position = getAdapterPosition();
-            Trailer trailer = mTrailerList.get(position);
-            mTrailerItemListener.onTrailerClick(Uri.parse("http://www.youtube.com/watch?v=" + trailer.getKey()));
+            if(mModeCursor){
+                Trailer trailer = getItem(position);
+                if(trailer != null){
+                    mTrailerItemListener.onTrailerClick(Uri.parse("http://www.youtube.com/watch?v=" + trailer.getKey()));
+                }
+            }else{
+                Trailer trailer = mTrailerList.get(position);
+                mTrailerItemListener.onTrailerClick(Uri.parse("http://www.youtube.com/watch?v=" + trailer.getKey()));
+            }
         }
     }
 }

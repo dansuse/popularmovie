@@ -1,5 +1,6 @@
 package com.example.danielsetyabudi.movies.contentprovider;
 
+import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -23,6 +24,10 @@ public class MovieContract {
         public static final String COLUMN_RELEASE_DATE = "releaseDate";
         public static final String COLUMN_OVERVIEW = "overview";
         public static final String COLUMN_USER_RATING = "userRating";
+
+        public static Uri buildMovieUri(long movieId) {
+            return ContentUris.withAppendedId(CONTENT_URI, movieId);
+        }
     }
     public static final class TrailerEntry implements BaseColumns{
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
@@ -32,6 +37,10 @@ public class MovieContract {
         public static final String COLUMN_KEY = "key";
         public static final String COLUMN_NAME = "name";
         public static final String COLUMN_MOVIE_ID = "movieId";
+
+        public static Uri buildTrailerUri(long movieId) {
+            return ContentUris.withAppendedId(CONTENT_URI, movieId);
+        }
     }
     public static final class ReviewEntry implements BaseColumns{
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
@@ -41,5 +50,9 @@ public class MovieContract {
         public static final String COLUMN_CONTENT = "content";
         public static final String COLUMN_AUTHOR = "author";
         public static final String COLUMN_MOVIE_ID = "movieId";
+
+        public static Uri buildReviewUri(long movieId) {
+            return ContentUris.withAppendedId(CONTENT_URI, movieId);
+        }
     }
 }

@@ -84,4 +84,28 @@ public class Movie {
     public void setReviewList(List<Review> reviewList) {
         mReviewList = reviewList;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setOriginalTitle(String originalTitle) {
+        this.originalTitle = originalTitle;
+    }
+
+    public void setPosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+
+    public void setReleaseDate(String releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
+    }
+
+    public void setUserRating(String userRating) {
+        this.userRating = userRating;
+    }
 }

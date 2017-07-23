@@ -12,8 +12,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.example.danielsetyabudi.movies.contentprovider.MovieContract.MovieEntry;
-import com.example.danielsetyabudi.movies.contentprovider.MovieContract.TrailerEntry;
 import com.example.danielsetyabudi.movies.contentprovider.MovieContract.ReviewEntry;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract.TrailerEntry;
 
 /**
  * Created by daniel on 22/07/2017.

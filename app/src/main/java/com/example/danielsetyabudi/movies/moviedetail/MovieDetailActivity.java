@@ -2,14 +2,19 @@ package com.example.danielsetyabudi.movies.moviedetail;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,22 +25,31 @@ import android.widget.TextView;
 import com.example.danielsetyabudi.movies.R;
 import com.example.danielsetyabudi.movies.adapter.ReviewsAdapter;
 import com.example.danielsetyabudi.movies.adapter.TrailersAdapter;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.model.Review;
 import com.example.danielsetyabudi.movies.model.Trailer;
+import com.example.danielsetyabudi.movies.util.CursorToList;
 import com.example.danielsetyabudi.movies.widgets.SquareImageView;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_FAVORITE;
+
 //di java, tidak dapat implement interface yang di deklarasi di
 //class itu sendiri
 public class MovieDetailActivity
-        extends AppCompatActivity implements MovieDetailContract.View
+        extends AppCompatActivity
+        implements MovieDetailContract.View,
+        LoaderManager.LoaderCallbacks<Cursor>
 {
 
     public interface TrailerItemListener{
@@ -52,11 +66,18 @@ public class MovieDetailActivity
     private static final String EXTRA_MOVIE_ID = "extra_movie_id";
     private static final String EXTRA_MOVIE_MODE = "extra_movie_mode";
     private static final String DIALOG_MOVIE_POSTER_TAG = "dialog_movie_poster_tag";
+
     private MovieDetailContract.UserActionsListener mActionsListener;
 
     private TrailersAdapter mTrailersAdapter;
     private ReviewsAdapter mReviewsAdapter;
     private MenuItem mFavMenuItem;
+
+    private int mMovieId;
+
+    private Movie mMovie;
+    private List<Trailer> mTrailerList = new ArrayList<>();
+    private List<Review> mReviewList = new ArrayList<>();
 
     @Override
     public void showDialogFragmentMoviePoster(String imageUrl) {
@@ -88,14 +109,94 @@ public class MovieDetailActivity
         return intent;
     }
 
+
+    private static final int ID_MOVIE_LOADER = 45;
+    private static final int ID_TRAILER_LOADER = 46;
+    private static final int ID_REVIEW_LOADER = 47;
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if(id == ID_MOVIE_LOADER){
+            Uri uri = MovieContract.MovieEntry.buildMovieUri(mMovieId);
+            return new CursorLoader(this, uri, null, null, null, null);
+        }else if(id == ID_REVIEW_LOADER){
+            Uri uri = MovieContract.ReviewEntry.buildReviewUri(mMovieId);
+            return new CursorLoader(this, uri, null, null, null, null);
+        }else if(id == ID_TRAILER_LOADER){
+            Uri uri = MovieContract.TrailerEntry.buildTrailerUri(mMovieId);
+            return new CursorLoader(this, uri, null, null, null, null);
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if(loader.getId() == ID_MOVIE_LOADER){
+            if(data != null && !data.isClosed() && data.moveToFirst()){
+                String originalTitle = data.getString(data.getColumnIndex(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                String releaseDate = data.getString(data.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+                String overview = data.getString(data.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW));
+                String posterPath = data.getString(data.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+                String userRating = data.getString(data.getColumnIndex(MovieContract.MovieEntry.COLUMN_USER_RATING));
+                int _id = data.getInt(data.getColumnIndex(MovieContract.MovieEntry._ID));
+                setTitle(originalTitle);
+                showMovieTitle(originalTitle);
+                showReleaseDate(releaseDate);
+                showUserRating(userRating);
+                showSynopsis(overview);
+                Movie movie = new Movie();
+                movie.setPosterPath(posterPath);
+                movie.setId(_id);
+                movie.setOriginalTitle(originalTitle);
+                movie.setUserRating(userRating);
+                movie.setOverview(overview);
+                movie.setReleaseDate(releaseDate);
+                mMovie = movie;
+                showMoviePoster(movie.getPosterPath());
+            }
+        }else if(loader.getId() == ID_REVIEW_LOADER){
+            if(data != null && !data.isClosed() && data.moveToFirst() && data.getCount() > 0){
+                mReviewList = CursorToList.convertCursorToReviewList(data);
+                mReviewsLinearLayout.setVisibility(View.VISIBLE);
+            }
+            mReviewsAdapter.swapCursor(data);
+        }else if(loader.getId() == ID_TRAILER_LOADER){
+            if(data != null && !data.isClosed() && data.moveToFirst() && data.getCount() > 0){
+                mTrailerList = CursorToList.convertCursorToTrailerList(data);
+                mTrailersCardView.setVisibility(View.VISIBLE);
+            }
+            mTrailersAdapter.swapCursor(data);
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        if(loader.getId() == ID_MOVIE_LOADER){
+
+        }else if(loader.getId() == ID_REVIEW_LOADER){
+            mReviewsAdapter.swapCursor(null);
+        }else if(loader.getId() == ID_TRAILER_LOADER){
+            mTrailersAdapter.swapCursor(null);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
         ButterKnife.bind(this);
+
+        //alasan mengapa setTitle dengan string kosong adalah
+        //karena jika tidak, maka ketika loader selesai load, title tidak
+        //akan keganti menjadi judul film
+        //https://stackoverflow.com/questions/26486730/in-android-app-toolbar-settitle-method-has-no-effect-application-name-is-shown
+        mToolbar.setTitle("");
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mActionsListener = new MovieDetailPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this, this);
+
+
         mTrailersAdapter = new TrailersAdapter(this, mTrailerItemListener);
         mReviewsAdapter = new ReviewsAdapter();
 
@@ -106,20 +207,25 @@ public class MovieDetailActivity
                 LinearLayoutManager.HORIZONTAL);
         mTrailersRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        mReviewsRecyclerView.setAdapter(mReviewsAdapter);
         mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
+        mReviewsRecyclerView.setAdapter(mReviewsAdapter);
+        mReviewsRecyclerView.setHasFixedSize(true);
 
-    @Override
-    public void onResume() {
-        super.onResume();
+
         Intent intent = getIntent();
         if(intent != null){
             if(intent.hasExtra(EXTRA_MOVIE_ID) && intent.hasExtra(EXTRA_MOVIE_MODE)){
                 int movieId = intent.getIntExtra(EXTRA_MOVIE_ID, -1);
                 int movieMode = intent.getIntExtra(EXTRA_MOVIE_MODE, -1);
                 if(movieId != -1 && movieMode != -1){
-                    mActionsListener.openMovie(movieMode, movieId);
+                    mMovieId = movieId;
+                    if(movieMode == MODE_FAVORITE){
+                        getSupportLoaderManager().initLoader(ID_MOVIE_LOADER, null, this);
+                        getSupportLoaderManager().initLoader(ID_REVIEW_LOADER, null, this);
+                        getSupportLoaderManager().initLoader(ID_TRAILER_LOADER, null, this);
+                    }else{
+                        mActionsListener.openMovie(movieMode, movieId);
+                    }
                 }
             }
         }
@@ -129,7 +235,7 @@ public class MovieDetailActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
         mFavMenuItem = menu.findItem(R.id.action_favorite);
-        mActionsListener.checkIfMovieIsFavorite();
+        mActionsListener.checkIfMovieIsFavorite(mMovieId);
         return true;
     }
 
@@ -137,7 +243,7 @@ public class MovieDetailActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_favorite:
-                mActionsListener.setMovieAsFavorite();
+                mActionsListener.setMovieAsFavorite(mMovie, mTrailerList, mReviewList);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -149,17 +255,26 @@ public class MovieDetailActivity
         mFavMenuItem.setIcon((favorite) ? R.drawable.ic_favorite_on : R.drawable.ic_favorite_off);
     }
 
+
+    @Override
+    public void setMovie(Movie movie) {
+        mMovie = movie;
+    }
+
     @Override
     public void showTrailers(List<Trailer> trailers) {
+        mTrailerList = trailers;
         mTrailersCardView.setVisibility(View.VISIBLE);
         mTrailersAdapter.replaceData(trailers);
     }
 
     @Override
     public void showReviews(List<Review> reviews) {
+        mReviewList = reviews;
         mReviewsLinearLayout.setVisibility(View.VISIBLE);
         mReviewsAdapter.replaceData(reviews);
     }
+
 
     @Override
     public void setTitle(String title) {

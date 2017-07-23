@@ -3,9 +3,13 @@ package com.example.danielsetyabudi.movies.movies;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -20,6 +24,8 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 
 import com.example.danielsetyabudi.movies.R;
+import com.example.danielsetyabudi.movies.adapter.FavoriteMovieAdapter;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract;
 import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
@@ -32,24 +38,38 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnItemSelected;
 
+import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_FAVORITE;
 import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_POPULAR;
 import static com.example.danielsetyabudi.movies.util.MovieConstant.MODE_TOP_RATED;
 
-public class MoviesActivity extends AppCompatActivity implements MoviesContract.View {
+public class MoviesActivity extends AppCompatActivity
+        implements MoviesContract.View, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String SAVE_STATE_LAST_VISIBLE_ITEM = "save_state_last_visible_item";
     private static final String SAVE_STATE_MOVIE_MODE = "save_state_movie_mode";
 
     private MoviesAdapter mMoviesAdapter;
+    private FavoriteMovieAdapter mFavoriteMovieAdapter;
     private ArrayAdapter<CharSequence> mSpinnerAdapter;
     private MoviesContract.UserActionsListener mActionsListener;
 
     private int mMovieMode = MODE_POPULAR;
+    private int ID_FAVORITE_LOADER = 44;
 
     private MovieItemListener mMovieItemListener = new MovieItemListener() {
         @Override
         public void onMovieClick(int movieId) {
-            mActionsListener.handleMovieClicked(movieId);
+            if(mMovieMode != MODE_FAVORITE){
+                mActionsListener.handleMovieClicked(movieId);
+            }else{
+                //dipanggil disini (bukan di presenter seperti biasanya)
+                //karena ketika spinner diganti ke favorite,
+                //movie mode di presenter tidak diganti.
+                //Hal ini karena panggil loader, bukan presenter (perhatikan void onItemSelected(int position) )
+                //saat spinner diganti ke favorite
+                Intent intent = MovieDetailActivity.newIntent(MoviesActivity.this, movieId, mMovieMode);
+                startActivity(intent);
+            }
         }
     };
 
@@ -66,12 +86,45 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
 
     @OnItemSelected(R.id.spinner_movies)
     void onItemSelected(int position) {
-        if(position == MODE_POPULAR){
-            mMovieMode = MODE_POPULAR;
-        }else if(position == MODE_TOP_RATED){
-            mMovieMode = MODE_TOP_RATED;
+        if(position == MODE_FAVORITE){
+            //mengecek mode sebelumnya
+            if(mMovieMode != MODE_FAVORITE){
+                mMoviesRecyclerView.setAdapter(mFavoriteMovieAdapter);
+            }
+            mMovieMode = MODE_FAVORITE;
+            getSupportLoaderManager().restartLoader(ID_FAVORITE_LOADER, null, this);
+        }else{
+            //mengecek mode sebelumnya
+            if(mMovieMode == MODE_FAVORITE){//kalau tidak di if seperti ini, maka setiap ganti dari
+                //popular ke top rated atau sebaliknya,
+                //recycler ke scroll ke atas
+
+                //merestart loader ketika spinner diubah menjadi favorite
+                mMoviesRecyclerView.setAdapter(mMoviesAdapter);
+            }
+            if(position == MODE_POPULAR){
+                mMovieMode = MODE_POPULAR;
+            }else if(position == MODE_TOP_RATED){
+                mMovieMode = MODE_TOP_RATED;
+            }
+            mActionsListener.loadMovies(false, mMovieMode);
         }
-        mActionsListener.loadMovies(false, mMovieMode);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(this, MovieContract.MovieEntry.CONTENT_URI, null, null, null, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        setProgressIndicator(false);
+        mFavoriteMovieAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mFavoriteMovieAdapter.swapCursor(null);
     }
 
     @Override
@@ -81,17 +134,20 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
         ButterKnife.bind(this);
 
         setSupportActionBar(mMoviesToolbar);
+
+        //MENG-INIT PRESENTER
+        mActionsListener = new MoviesPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
+
+        //============TENTANG SPINNER======================
         mSpinnerAdapter = ArrayAdapter.createFromResource(this,
                 R.array.movies_options_array, R.layout.movie_mode_spinner_item);
 
         mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mMoviesSpinner.setAdapter(mSpinnerAdapter);
+        //=========================================
 
-
-        mActionsListener = new MoviesPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
 
         final int numColumns = this.getResources().getInteger(R.integer.num_movies_columns);
-
         mMoviesRecyclerView.setHasFixedSize(true);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, numColumns);
         gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
@@ -109,7 +165,11 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
         });
         mMoviesRecyclerView.setLayoutManager(gridLayoutManager);
 
+        //=====MENG-INIT ADAPTER
         mMoviesAdapter = new MoviesAdapter(mMovieItemListener, this);
+        //ADAPTER UNTUK SPINNER MOVIE
+        mFavoriteMovieAdapter = new FavoriteMovieAdapter(mMovieItemListener, this);
+        //====SELESAI MENG-INIT ADAPTER
 
         if(savedInstanceState != null){
             if(savedInstanceState.getInt(SAVE_STATE_LAST_VISIBLE_ITEM, -1) != -1){
@@ -138,6 +198,8 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
             }
         });
 
+
+
         mMoviesSwipeRefresh.setColorSchemeColors(
                 ContextCompat.getColor(MoviesActivity.this, R.color.colorPrimary),
                 ContextCompat.getColor(MoviesActivity.this, R.color.colorAccent),
@@ -145,7 +207,11 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
         mMoviesSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mActionsListener.loadMovies(true);
+                if(mMovieMode != MODE_FAVORITE){
+                    mActionsListener.loadMovies(true);
+                }else{
+                    getSupportLoaderManager().restartLoader(ID_FAVORITE_LOADER, null, MoviesActivity.this);
+                }
             }
         });
     }
@@ -153,7 +219,9 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
     @Override
     protected void onResume() {
         super.onResume();
-        mActionsListener.loadMovies(false, mMovieMode);
+        if(mMovieMode != MODE_FAVORITE){
+            mActionsListener.loadMovies(false, mMovieMode);
+        }
     }
 
     @Override
@@ -189,7 +257,10 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(SAVE_STATE_LAST_VISIBLE_ITEM, mMoviesAdapter.getLastVisibleItem());
+        if(mMovieMode != MODE_FAVORITE){
+            outState.putInt(SAVE_STATE_LAST_VISIBLE_ITEM, mMoviesAdapter.getLastVisibleItem());
+        }
+
         //di comment karena ketika mainactivity, launch mode = "single top" di manifest,
         //maka tidak perlu menyimpan di savedInstanceState
         //outState.putInt(SAVE_STATE_MOVIE_MODE, mMovieMode);
@@ -210,6 +281,8 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
         //sehingga alur yang ada akan secara otomatis memanggil setLoaded ketika movies sudah di load.
         //mMoviesAdapter.setLoaded();
     }
+
+
 
     private class MoviesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         private static final int VIEW_TYPE_ITEM = 0;
@@ -241,34 +314,38 @@ public class MoviesActivity extends AppCompatActivity implements MoviesContract.
                 public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                     super.onScrolled(recyclerView, dx, dy);
 
-//                    Log.d("tes123X", String.valueOf(recyclerView.getScrollX()));
-//                    Log.d("tes123Y", String.valueOf(recyclerView.getScrollY()));
+                    //if dibawah karena, sempat mau jadi satu adapter untuk favorite movie dengan (popular dan top rated)
+                    //padahal untuk favorite movie, tidak ada behaviour untuk load more
+                    //sehingga diputuskan untuk membuat class adapter sendiri untuk favorite movie
+                    //if(mMovieMode != MODE_FAVORITE){
+//                        Log.d("tes123X", String.valueOf(recyclerView.getScrollX()));
+//                        Log.d("tes123Y", String.valueOf(recyclerView.getScrollY()));
+                        totalItemCount = gridLayoutManager.getItemCount();
+                        int tempLastVisibleItem = gridLayoutManager.findLastVisibleItemPosition();
+//                        Log.d("tes123", String.valueOf(lastVisibleItem));
+//                        Log.d("tes123=", String.valueOf(tempLastVisibleItem - lastVisibleItem));
+                        if(tempLastVisibleItem - lastVisibleItem < 10){
+//                            if(mode == MODE_POPULAR){
+//                                scrollXPopular = dx;
+//                                scrollYPopular = dy;
+//                            }else if(mode == MODE_TOP_RATED){
+//                                scrollXTopRated = dx;
+//                                scrollYTopRated = dy;
+//                            }
 
-                    totalItemCount = gridLayoutManager.getItemCount();
-                    int tempLastVisibleItem = gridLayoutManager.findLastVisibleItemPosition();
-//                    Log.d("tes123", String.valueOf(lastVisibleItem));
-//                    Log.d("tes123=", String.valueOf(tempLastVisibleItem - lastVisibleItem));
-                    if(tempLastVisibleItem - lastVisibleItem < 10){
-//                        if(mode == MODE_POPULAR){
-//                            scrollXPopular = dx;
-//                            scrollYPopular = dy;
-//                        }else if(mode == MODE_TOP_RATED){
-//                            scrollXTopRated = dx;
-//                            scrollYTopRated = dy;
-//                        }
-
-
-                        lastVisibleItem = tempLastVisibleItem;
-//                        Log.d("tes123total", String.valueOf(totalItemCount));
-//                        Log.d("tes123last", String.valueOf(lastVisibleItem));
-                        if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                            if (mOnLoadMoreListener != null) {
-//                                Log.d("tes123load", "masuk");
-                                mOnLoadMoreListener.onLoadMore(mMovies);
-
+                            lastVisibleItem = tempLastVisibleItem;
+//                            Log.d("tes123total", String.valueOf(totalItemCount));
+//                            Log.d("tes123last", String.valueOf(lastVisibleItem));
+                            if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                                if (mOnLoadMoreListener != null) {
+//                                    Log.d("tes123load", "masuk");
+                                    mOnLoadMoreListener.onLoadMore(mMovies);
+                                }
                             }
                         }
-                    }
+                    //}else{
+
+                    //}
                 }
             });
         }

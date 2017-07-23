@@ -7,4 +7,5 @@ package com.example.danielsetyabudi.movies.util;
 public class MovieConstant {
     public static final int MODE_POPULAR = 0;
     public static final int MODE_TOP_RATED = 1;
+    public static final int MODE_FAVORITE = 2;
 }

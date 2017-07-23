@@ -1,5 +1,6 @@
 package com.example.danielsetyabudi.movies.moviedetail;
 
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.model.Review;
 import com.example.danielsetyabudi.movies.model.Trailer;
 
@@ -36,12 +37,15 @@ public interface MovieDetailContract {
         void showReviews(List<Review> reviews);
 
         void turnFavorite(boolean favorite);
+
+        void setMovie(Movie movie);
     }
     interface UserActionsListener{
         void openMovie(int mode, int movieId);
         void handleKlikMoviePosterImageView();
         //void checkIfMovieIsFavorite(Context context);
-        void checkIfMovieIsFavorite();
-        void setMovieAsFavorite();
+        void checkIfMovieIsFavorite(int movieId);
+        void setMovieAsFavorite(Movie movie, List<Trailer> trailerList, List<Review> reviewList);
+
     }
 }

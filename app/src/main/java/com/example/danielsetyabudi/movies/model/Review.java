@@ -21,4 +21,12 @@ public class Review {
     public String getUrl() {
         return url;
     }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 }
