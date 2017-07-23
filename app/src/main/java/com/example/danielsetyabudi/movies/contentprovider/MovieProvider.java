@@ -54,6 +54,7 @@ public class MovieProvider extends ContentProvider {
         switch (match){
             case CODE_MOVIE:
                 cursor = database.query(MovieEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+                cursor.setNotificationUri(getContext().getContentResolver(), uri);
                 break;
             case CODE_MOVIE_WITH_ID:
                 //mengecek apakah movie dengan id tertentu termasuk dalam daftar favorite
@@ -146,6 +147,7 @@ public class MovieProvider extends ContentProvider {
                 id = database.insert(MovieEntry.TABLE_NAME, null, values);
                 if(id > 0){
                     returnUri = ContentUris.withAppendedId(MovieEntry.CONTENT_URI, id);
+                    getContext().getContentResolver().notifyChange(uri, null);
                 }
                 break;
             default:
@@ -165,6 +167,9 @@ public class MovieProvider extends ContentProvider {
                 String mSelection = "_id=?";
                 String[] mSelectionArgs = new String[]{id};
                 rowsDeleted = db.delete(MovieEntry.TABLE_NAME, mSelection, mSelectionArgs);
+                if(rowsDeleted > 0){
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
                 break;
             case CODE_REVIEW_BY_MOVIE_ID:
                 String movieId = uri.getPathSegments().get(1);

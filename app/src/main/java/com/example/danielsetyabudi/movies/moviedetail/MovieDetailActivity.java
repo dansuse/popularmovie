@@ -1,5 +1,6 @@
 package com.example.danielsetyabudi.movies.moviedetail;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -78,6 +79,8 @@ public class MovieDetailActivity
     private Movie mMovie;
     private List<Trailer> mTrailerList = new ArrayList<>();
     private List<Review> mReviewList = new ArrayList<>();
+
+    private ProgressDialog progressDialog;
 
     @Override
     public void showDialogFragmentMoviePoster(String imageUrl) {
@@ -212,6 +215,11 @@ public class MovieDetailActivity
         mReviewsRecyclerView.setHasFixedSize(true);
 
 
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage("Loading...");
+
+
         Intent intent = getIntent();
         if(intent != null){
             if(intent.hasExtra(EXTRA_MOVIE_ID) && intent.hasExtra(EXTRA_MOVIE_MODE)){
@@ -244,6 +252,7 @@ public class MovieDetailActivity
         switch (item.getItemId()){
             case R.id.action_favorite:
                 mActionsListener.setMovieAsFavorite(mMovie, mTrailerList, mReviewList);
+                showProgressDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -252,7 +261,18 @@ public class MovieDetailActivity
 
     @Override
     public void turnFavorite(boolean favorite) {
+        hideProgressDialog();
         mFavMenuItem.setIcon((favorite) ? R.drawable.ic_favorite_on : R.drawable.ic_favorite_off);
+    }
+
+    private void showProgressDialog(){
+        mFavMenuItem.setEnabled(false);
+        progressDialog.show();
+    }
+
+    private void hideProgressDialog(){
+        mFavMenuItem.setEnabled(true);
+        progressDialog.dismiss();
     }
 
 
