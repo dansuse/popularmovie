@@ -402,7 +402,11 @@ public class MoviesActivity extends AppCompatActivity
 
         @Override
         public int getItemViewType(int position) {
-            return mMovies.get(position) == null ? VIEW_TYPE_LOADING : VIEW_TYPE_ITEM;
+            if(mMovies != null){
+                return mMovies.get(position) == null ? VIEW_TYPE_LOADING : VIEW_TYPE_ITEM;
+            }else{
+                return VIEW_TYPE_ITEM;
+            }
         }
 
         @Override

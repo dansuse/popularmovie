@@ -214,6 +214,9 @@ public class MovieDetailActivity
         mReviewsRecyclerView.setAdapter(mReviewsAdapter);
         mReviewsRecyclerView.setHasFixedSize(true);
 
+        //https://stackoverflow.com/questions/37301724/recyclerview-inside-nested-scrollview-scroll-but-does-not-fast-scroll-like-norma
+        mReviewsRecyclerView.setNestedScrollingEnabled(false);
+
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setIndeterminate(true);
