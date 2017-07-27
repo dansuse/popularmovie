@@ -61,7 +61,9 @@ public class MovieDetailActivity
         public void onTrailerClick(Uri uriToWatchTrailer) {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(uriToWatchTrailer);
-            startActivity(intent);
+            if(intent.resolveActivity(getPackageManager()) != null){
+                startActivity(intent);
+            }
         }
     };
     private static final String EXTRA_MOVIE_ID = "extra_movie_id";
