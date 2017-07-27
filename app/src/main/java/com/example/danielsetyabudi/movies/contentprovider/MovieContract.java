@@ -55,4 +55,15 @@ public class MovieContract {
             return ContentUris.withAppendedId(CONTENT_URI, movieId);
         }
     }
+    public static final class Constants{
+        public static final Uri URI_FOR_SELECT_FROM_MOVIE_WITH_TRAILER_WITH_REVIEW =
+                BASE_CONTENT_URI.buildUpon()
+                        .appendPath(PATH_MOVIE)
+                        .appendPath(PATH_TRAILER)
+                        .appendPath(PATH_REVIEW)
+                        .build();
+        public static Uri buildUriForSelectFromMovieWithTrailerWithReview(long movieId){
+            return ContentUris.withAppendedId(URI_FOR_SELECT_FROM_MOVIE_WITH_TRAILER_WITH_REVIEW, movieId);
+        }
+    }
 }
