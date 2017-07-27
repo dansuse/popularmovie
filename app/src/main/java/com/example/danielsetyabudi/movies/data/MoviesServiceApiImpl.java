@@ -46,9 +46,11 @@ public class MoviesServiceApiImpl
     public void loadMovies(int mode, int page, @NonNull final MoviesServiceApi.MoviesServiceCallback<List<Movie>> callback){
         Call<ListModel<Movie>> call = null;
         if(mode == MODE_POPULAR){
-            call = mMoviesServiceApi.loadPopularMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            //call = mMoviesServiceApi.loadPopularMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            call = mMoviesServiceApi.loadMovies("popular", BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
         }else if(mode == MODE_TOP_RATED){
-            call = mMoviesServiceApi.loadTopRatedMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            //call = mMoviesServiceApi.loadTopRatedMovies(BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
+            call = mMoviesServiceApi.loadMovies("top_rated", BuildConfig.THE_MOVIE_DB_API_TOKEN, "en-US", String.valueOf(page));
         }
         if(call != null){
             call.enqueue(new Callback<ListModel<Movie>>() {

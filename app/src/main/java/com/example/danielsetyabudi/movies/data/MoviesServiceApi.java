@@ -20,11 +20,14 @@ public interface MoviesServiceApi {
         void onLoaded(T results);
     }
 
-    @GET("3/movie/popular")
-    Call<ListModel<Movie>>loadPopularMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+    @GET("3/movie/{sort}")
+    Call<ListModel<Movie>>loadMovies(@Path("sort") String order, @Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
 
-    @GET("3/movie/top_rated")
-    Call<ListModel<Movie>>loadTopRatedMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+//    @GET("3/movie/popular")
+//    Call<ListModel<Movie>>loadPopularMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
+//
+//    @GET("3/movie/top_rated")
+//    Call<ListModel<Movie>>loadTopRatedMovies(@Query("api_key") String apiKey, @Query("language") String language, @Query("page") String page);
 
     @GET("3/movie/{movie_id}/videos")
     Call<ListModel<Trailer>>loadTrailers(@Path("movie_id") int movieId, @Query("api_key") String apiKey, @Query("language") String language);
