@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +27,9 @@ import android.widget.Spinner;
 import com.example.danielsetyabudi.movies.R;
 import com.example.danielsetyabudi.movies.adapter.FavoriteMovieAdapter;
 import com.example.danielsetyabudi.movies.contentprovider.MovieContract;
-import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.data.MovieRepositories;
 import com.example.danielsetyabudi.movies.data.MoviesServiceApiImpl;
+import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.moviedetail.MovieDetailActivity;
 import com.squareup.picasso.Picasso;
 
@@ -84,31 +85,39 @@ public class MoviesActivity extends AppCompatActivity
     @BindView(R.id.spinner_movies) Spinner mMoviesSpinner;
     @BindView(R.id.swipe_refresh_movies) SwipeRefreshLayout mMoviesSwipeRefresh;
 
+    private boolean mSpinnerUdahSiap = false;
     @OnItemSelected(R.id.spinner_movies)
     void onItemSelected(int position) {
-        if(position == MODE_FAVORITE){
-            //mengecek mode sebelumnya
-            if(mMovieMode != MODE_FAVORITE){
+        if(mSpinnerUdahSiap){
+            Log.d("tes123", "terpanggil");
+            if(position == MODE_FAVORITE){
                 mMoviesRecyclerView.setAdapter(mFavoriteMovieAdapter);
-            }
-            mMovieMode = MODE_FAVORITE;
-            getSupportLoaderManager().restartLoader(ID_FAVORITE_LOADER, null, this);
-        }else{
-            //mengecek mode sebelumnya
-            if(mMovieMode == MODE_FAVORITE){//kalau tidak di if seperti ini, maka setiap ganti dari
-                //popular ke top rated atau sebaliknya,
-                //recycler ke scroll ke atas
+                //mengecek mode sebelumnya
+                if(mMovieMode != MODE_FAVORITE){
+                    Log.d("tes123", "masuk if");
 
-                //merestart loader ketika spinner diubah menjadi favorite
-                mMoviesRecyclerView.setAdapter(mMoviesAdapter);
+                    getSupportLoaderManager().restartLoader(ID_FAVORITE_LOADER, null, this);
+                }
+                mMovieMode = MODE_FAVORITE;
+                getSupportLoaderManager().initLoader(ID_FAVORITE_LOADER, null, this);
+            }else{
+                //mengecek mode sebelumnya
+                if(mMovieMode == MODE_FAVORITE){//kalau tidak di if seperti ini, maka setiap ganti dari
+                    //popular ke top rated atau sebaliknya,
+                    //recycler ke scroll ke atas
+
+                    //merestart loader ketika spinner diubah menjadi favorite
+                    mMoviesRecyclerView.setAdapter(mMoviesAdapter);
+                }
+                if(position == MODE_POPULAR){
+                    mMovieMode = MODE_POPULAR;
+                }else if(position == MODE_TOP_RATED){
+                    mMovieMode = MODE_TOP_RATED;
+                }
+                mActionsListener.loadMovies(false, mMovieMode);
             }
-            if(position == MODE_POPULAR){
-                mMovieMode = MODE_POPULAR;
-            }else if(position == MODE_TOP_RATED){
-                mMovieMode = MODE_TOP_RATED;
-            }
-            mActionsListener.loadMovies(false, mMovieMode);
         }
+        mSpinnerUdahSiap = true;
     }
 
     @Override
@@ -137,14 +146,6 @@ public class MoviesActivity extends AppCompatActivity
 
         //MENG-INIT PRESENTER
         mActionsListener = new MoviesPresenter(MovieRepositories.getInMemoryRepoInstance(new MoviesServiceApiImpl()), this);
-
-        //============TENTANG SPINNER======================
-        mSpinnerAdapter = ArrayAdapter.createFromResource(this,
-                R.array.movies_options_array, R.layout.movie_mode_spinner_item);
-
-        mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mMoviesSpinner.setAdapter(mSpinnerAdapter);
-        //=========================================
 
 
         final int numColumns = this.getResources().getInteger(R.integer.num_movies_columns);
@@ -179,8 +180,9 @@ public class MoviesActivity extends AppCompatActivity
                 mMovieMode = savedInstanceState.getInt(SAVE_STATE_MOVIE_MODE, -1);
             }
         }
-
-        mMoviesRecyclerView.setAdapter(mMoviesAdapter);
+        if(mMovieMode != MODE_FAVORITE){
+            mMoviesRecyclerView.setAdapter(mMoviesAdapter);
+        }
 
         int spacingInPixels = getResources().getDimensionPixelSize(R.dimen.rv_list_movie_spacing);
         mMoviesRecyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
@@ -198,6 +200,14 @@ public class MoviesActivity extends AppCompatActivity
             }
         });
 
+
+        //============TENTANG SPINNER======================
+        mSpinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.movies_options_array, R.layout.movie_mode_spinner_item);
+
+        mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mMoviesSpinner.setAdapter(mSpinnerAdapter);
+        //=========================================
 
 
         mMoviesSwipeRefresh.setColorSchemeColors(
@@ -264,6 +274,8 @@ public class MoviesActivity extends AppCompatActivity
         //di comment karena ketika mainactivity, launch mode = "single top" di manifest,
         //maka tidak perlu menyimpan di savedInstanceState
         //outState.putInt(SAVE_STATE_MOVIE_MODE, mMovieMode);
+
+        outState.putInt(SAVE_STATE_MOVIE_MODE, mMovieMode);
     }
 
     public interface MovieItemListener {
