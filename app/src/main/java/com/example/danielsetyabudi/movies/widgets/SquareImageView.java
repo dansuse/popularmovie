@@ -1,8 +1,8 @@
 package com.example.danielsetyabudi.movies.widgets;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.support.v7.widget.AppCompatImageView;
+import android.util.AttributeSet;
 
 /**
  * Created by daniel on 21/07/2017.

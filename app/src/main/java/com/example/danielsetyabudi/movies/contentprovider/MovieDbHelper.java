@@ -5,8 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.danielsetyabudi.movies.contentprovider.MovieContract.MovieEntry;
-import com.example.danielsetyabudi.movies.contentprovider.MovieContract.TrailerEntry;
 import com.example.danielsetyabudi.movies.contentprovider.MovieContract.ReviewEntry;
+import com.example.danielsetyabudi.movies.contentprovider.MovieContract.TrailerEntry;
 /**
  * Created by daniel on 22/07/2017.
  */

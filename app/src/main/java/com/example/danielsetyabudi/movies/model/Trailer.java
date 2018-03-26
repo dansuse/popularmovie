@@ -1,7 +1,5 @@
 package com.example.danielsetyabudi.movies.model;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * Created by daniel on 22/07/2017.
  */

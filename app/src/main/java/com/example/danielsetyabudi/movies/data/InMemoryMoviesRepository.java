@@ -1,8 +1,6 @@
 package com.example.danielsetyabudi.movies.data;
 
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.example.danielsetyabudi.movies.model.Movie;
 import com.example.danielsetyabudi.movies.model.Review;
